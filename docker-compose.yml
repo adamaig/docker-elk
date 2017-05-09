@@ -15,8 +15,11 @@ services:
       xpack.monitoring.enabled: "false"
       xpack.graph.enabled: "false"
       xpack.watcher.enabled: "false"
+      SERVICE_9200_NAME: elasticsearch
+      SERVICE_9300_NAME: "elasticsearch-tcp"
     networks:
-      - docker_elk
+      external:
+        - bridge
   logstash:
     build: logstash/
     volumes:
@@ -24,21 +27,27 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     ports:
       - "5000:5000"
-    networks:
-      - docker_elk
+    environment:
+      SERVICE_TAGS: tcp
+      SERVICE_5000_NAME: logstash
     depends_on:
       - elasticsearch
+    #networks:
+    #  - docker_elk
+    #depends_on:
+    #  - elasticsearch
   kibana:
     build: kibana/
     volumes:
       - ./kibana/config/:/usr/share/kibana/config
     ports:
       - "5601:5601"
-    networks:
-      - docker_elk
+    environment:
+      SERVICE_5601_NAME: kibana
     depends_on:
       - elasticsearch
 
 networks:
-  docker_elk:
-    driver: bridge
+  default:
+    external:
+      name: bridge
